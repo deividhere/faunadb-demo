@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Course</title>
+    <style>
+        .container { max-width: 600px; margin: auto; padding: 20px; }
+        .entry { display: flex; justify-content: space-between; margin: 10px 0; }
+        .form-group { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><a href="courses.html">Back</a></h2>
+        <h1>Edit Course</h1>
+        <div>
+            <div class="form-group">
+                <label for="course-name">Name:</label>
+                <input type="text" id="course-name" />
+            </div>
+        </div>
+        <button onclick="updateCourse()">Update Course</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const courseId = urlParams.get('id');
+            const response = await fetch(`http://localhost:3000/courses/${courseId}`);
+            const courseData = await response.json();
+
+            document.getElementById('course-name').value = courseData.name;
+        });
+
+        async function updateCourse() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const courseId = urlParams.get('id');
+            const name = document.getElementById('course-name').value;
+            const courses = [];
+            document.querySelectorAll('#courses-list input:checked').forEach(checkbox => {
+                courses.push(checkbox.value);
+            });
+
+            const response = await fetch(`http://localhost:3000/courses/${courseId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, courses })
+            });
+
+            if (!response.ok) {
+                alert("Error " + response.status + ": " + response.statusText);
+            }
+            else {
+                window.location.href = '/courses.html';
+            }
+        }
+    </script>
+</body>
+</html>

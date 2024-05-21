@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses</title>
+    <style>
+        /* Basic styles for layout */
+        .container { max-width: 600px; margin: auto; padding: 20px; }
+        .entry { display: flex; justify-content: space-between; margin: 10px 0; }
+        .form-group { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><a href="index.html">Back</a></h2>
+        <h1>Courses</h1>
+        <div id="course-list"></div>
+        <h2>Add Course</h2>
+        <div>
+            <div class="form-group">
+                <label for="course-name">Name:</label>
+                <input type="text" id="course-name" />
+            </div>
+            <button onclick="addCourse()">Add Course</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCourses();
+        });
+
+        async function loadCourses() {
+            const response = await fetch('http://localhost:3000/courses');
+            const data = await response.json();
+            const courseList = document.getElementById('course-list');
+            courseList.innerHTML = '';
+            if (data.data.length > 0) {
+                data.data.forEach(course => {
+                    const entry = document.createElement('div');
+                    entry.className = 'entry';
+                    entry.innerHTML = `
+                        <span>${course.data.name}</span>
+                        <button onclick="editCourse('${course.ref['@ref'].id}')">Edit</button>
+                        <button onclick="deleteCourse('${course.ref['@ref'].id}')">Delete</button>
+                    `;
+                    courseList.appendChild(entry);
+                });
+            }
+            else {
+                courseList.innerHTML = 'There are no courses available.';
+            }
+        }
+
+        async function addCourse() {
+            const name = document.getElementById('course-name').value;
+
+            const response = await fetch('http://localhost:3000/courses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+
+            if (!response.ok) {
+                alert("Error " + response.status + ": " + response.statusText);
+            }
+            else {
+                loadCourses();
+                document.getElementById('course-name').value = '';
+            }
+        }
+
+        async function editCourse(id) {
+            window.location.href = `/edit_course.html?id=${id}`;
+        }
+
+        async function deleteCourse(id) {
+            const response = await fetch(`http://localhost:3000/courses/${id}`, { method: 'DELETE' });
+            if (!response.ok) {
+                alert("Error " + response.status + ": " + response.statusText);
+            }
+            else {
+                loadCourses();
+            }
+        }
+    </script>
+</body>
+</html>

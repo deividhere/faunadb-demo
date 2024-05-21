@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Student</title>
+    <style>
+        .container { max-width: 600px; margin: auto; padding: 20px; }
+        .entry { display: flex; justify-content: space-between; margin: 10px 0; }
+        .form-group { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><a href="students.html">Back</a></h2>
+        <h1>Edit Student</h1>
+        <div>
+            <div class="form-group">
+                <label for="student-name">Name:</label>
+                <input type="text" id="student-name" />
+            </div>
+            <div class="form-group">
+                <label for="student-courses">Courses:</label>
+                <div id="courses-list"></div>
+            </div>
+        </div>
+        <button onclick="updateStudent()">Update Student</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const studentId = urlParams.get('id');
+            const response = await fetch(`http://localhost:3000/students/${studentId}`);
+            const studentData = await response.json();
+
+            document.getElementById('student-name').value = studentData.name;
+
+            const coursesResponse = await fetch('http://localhost:3000/courses');
+            const coursesData = await coursesResponse.json();
+
+            const coursesList = document.getElementById('courses-list');
+            coursesList.innerHTML = '';
+
+            coursesData.data.forEach(course => {
+                const isChecked = studentData.courses.includes(course.data.name);
+                const courseCheckbox = document.createElement('div');
+                courseCheckbox.innerHTML = `
+                    <input type="checkbox" id="course-${course.ref['@ref'].id}" value="${course.data.name}" ${isChecked ? 'checked' : ''} />
+                    <label for="course-${course.ref['@ref'].id}">${course.data.name}</label>
+                `;
+                coursesList.appendChild(courseCheckbox);
+            });
+        });
+
+        async function updateStudent() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const studentId = urlParams.get('id');
+            const name = document.getElementById('student-name').value;
+            const courses = [];
+            document.querySelectorAll('#courses-list input:checked').forEach(checkbox => {
+                courses.push(checkbox.value);
+            });
+
+            const response = await fetch(`http://localhost:3000/students/${studentId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, courses })
+            });
+
+            if (!response.ok) {
+                alert("Error " + response.status + ": " + response.statusText);
+            }
+            else {
+                window.location.href = '/students.html';
+            }
+        }
+    </script>
+</body>
+</html>

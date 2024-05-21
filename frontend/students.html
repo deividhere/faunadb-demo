@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students</title>
+    <style>
+        .container { max-width: 600px; margin: auto; padding: 20px; }
+        .entry { display: flex; justify-content: space-between; margin: 10px 0; }
+        .form-group { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><a href="index.html">Back</a></h2>
+        <h1>Students</h1>
+        <div id="student-list"></div>
+        <h2>Add Student</h2>
+        <div>
+            <div class="form-group">
+                <label for="student-name">Name:</label>
+                <input type="text" id="student-name" />
+            </div>
+            <div class="form-group">
+                <label for="student-courses">Courses:</label>
+                <div id="courses-list"></div>
+            </div>
+            <button onclick="addStudent()">Add Student</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStudents();
+            loadCourses();
+        });
+
+        async function loadStudents() {
+            const response = await fetch('http://localhost:3000/students');
+            const data = await response.json();
+            const studentList = document.getElementById('student-list');
+            studentList.innerHTML = '';
+            if (data.data.length > 0) {
+                data.data.forEach(student => {
+                    const entry = document.createElement('div');
+                    entry.className = 'entry';
+                    const studentId = student.ref['@ref'].id;
+                    entry.innerHTML = `
+                        <span>${student.data.name}</span>
+                        <button onclick="editStudent('${studentId}')">Edit</button>
+                        <button onclick="deleteStudent('${studentId}')">Delete</button>
+                    `;
+                    studentList.appendChild(entry);
+                });
+            }
+            else {
+                studentList.innerHTML = 'There are no students yet.';
+            }
+        }
+
+        async function loadCourses() {
+            const response = await fetch('http://localhost:3000/courses');
+            const data = await response.json();
+            const coursesList = document.getElementById('courses-list');
+            coursesList.innerHTML = '';
+            if (data.data.length > 0) {
+                data.data.forEach(course => {
+                    const courseCheckbox = document.createElement('div');
+                    courseCheckbox.innerHTML = `
+                        <input type="checkbox" id="course-${course.ref['@ref'].id}" value="${course.data.name}" />
+                        <label for="course-${course.ref['@ref'].id}">${course.data.name}</label>
+                    `;
+                    coursesList.appendChild(courseCheckbox);
+                });
+            }
+            else {
+                coursesList.innerHTML = 'There are no courses yet. Add some courses first!';
+            }
+        }
+
+        async function addStudent() {
+            const name = document.getElementById('student-name').value;
+            const courses = [];
+            document.querySelectorAll('#courses-list input:checked').forEach(checkbox => {
+                courses.push(checkbox.value);
+            });
+
+            await fetch('http://localhost:3000/students', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, courses })
+            });
+
+            loadStudents();
+        }
+
+        async function editStudent(id) {
+            window.location.href = `/edit_student.html?id=${id}`;
+        }
+
+        async function deleteStudent(id) {
+            await fetch(`http://localhost:3000/students/${id}`, { method: 'DELETE' });
+            loadStudents();
+        }
+    </script>
+</body>
+</html>
