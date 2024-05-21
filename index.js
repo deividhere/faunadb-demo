@@ -4,7 +4,7 @@ const cors = require('cors');
 const app = express();
 const q = faunadb.query;
 
-const client = new faunadb.Client({ secret: 'fnAFh80vdwAA0B3mHo83PeaDAE5Qnf62e4zF5iOR' });
+const client = new faunadb.Client({ secret: 'YOUR_KEY_HERE' });
 
 app.use(cors());
 app.use(express.json());
